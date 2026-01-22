@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware  # <--- To jest ta nowa rzecz
 import requests
 from datetime import date as date_type
 from sqlalchemy.orm import Session
-# Importujemy rzeczy z naszego nowego pliku database.py
+# Importujemy rzeczy z naszego pliku database.py
 from database import engine, SessionLocal, Base, CurrencyRate
 
 # To tworzy tabelę w bazie danych (jeśli jeszcze nie istnieje)
@@ -10,7 +11,23 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# Funkcja pomocnicza do pobierania sesji bazy danych (otwiera i zamyka połączenie)
+# --- KONFIGURACJA CORS (Nowy fragment) ---
+# Pozwalamy Angularowi (który działa na porcie 4200) łączyć się z tym Backendem
+origins = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],     # Pozwalamy na każdą metodę (GET, POST itp.)
+    allow_headers=["*"],     # Pozwalamy na każde nagłówki
+)
+# -----------------------------------------
+
+# Funkcja pomocnicza do pobierania sesji bazy danych
 def get_db():
     db = SessionLocal()
     try:
@@ -20,7 +37,7 @@ def get_db():
 
 @app.get("/")
 def read_root():
-    return {"message": "System walutowy działa!"}
+    return {"message": "System walutowy działa (z obsługą CORS)!"}
 
 # Endpoint 1: Pobierz z NBP i zapisz do bazy
 @app.post("/currencies/fetch")

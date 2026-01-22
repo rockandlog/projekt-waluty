@@ -1,23 +1,34 @@
 import { TestBed } from '@angular/core/testing';
-import { App } from './app';
+import { AppComponent } from './app';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-describe('App', () => {
+describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App],
+      // Importujemy Twój komponent
+      imports: [AppComponent],
+      // Dostarczamy "udawany" internet, żeby testy nie próbowały naprawdę łączyć się z backendem
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting()
+      ]
     }).compileComponents();
   });
 
+  // Test 1: Sprawdza, czy aplikacja w ogóle się tworzy (czy nie ma błędów w kodzie)
   it('should create the app', () => {
-    const fixture = TestBed.createComponent(App);
+    const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
   });
 
-  it('should render title', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
+  // Test 2: Sprawdza, czy tytuł w kodzie HTML jest poprawny
+  it('should render title', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, frontend');
+    // Sprawdzamy czy w nagłówku h1 jest tekst "Projekt Waluty"
+    expect(compiled.querySelector('h1')?.textContent).toContain('Projekt Waluty');
   });
 });
