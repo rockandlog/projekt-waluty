@@ -1,46 +1,94 @@
-<div style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
+<div class="container mt-5">
   
-  <h1 style="text-align: center; color: #1976d2;">Projekt Waluty (Angular + Python)</h1>
-
-  <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
-    
-    <button (click)="pobierzDolara()" 
-            style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-right: 10px;">
-      💵 Pobierz USD z NBP
-    </button>
-    
-    <button (click)="odswiezListe()" 
-            style="background-color: #008CBA; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
-      🔄 Odśwież tabelę
-    </button>
-  
+  <div class="text-center mb-5">
+    <h1 class="display-4 fw-bold text-primary">💰 Kantor Walutowy</h1>
+    <p class="lead text-muted">Analiza kursów NBP</p>
   </div>
 
-  <h3 style="margin-bottom: 10px;">Dane w bazie:</h3>
-  
-  <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
-    <thead>
-      <tr style="background-color: #1976d2; color: white;">
-        <th style="padding: 12px; text-align: left;">ID</th>
-        <th style="padding: 12px; text-align: left;">Kod Waluty</th>
-        <th style="padding: 12px; text-align: left;">Kurs Średni</th>
-        <th style="padding: 12px; text-align: left;">Data</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let kurs of kursyWalut" style="border-bottom: 1px solid #ddd;">
-        <td style="padding: 8px;">{{ kurs.id }}</td>
-        <td style="padding: 8px;"><b>{{ kurs.currency_code }}</b></td>
-        <td style="padding: 8px; color: green; font-weight: bold;">{{ kurs.rate }} zł</td>
-        <td style="padding: 8px;">{{ kurs.date }}</td>
-      </tr>
+  <div class="card shadow-lg mb-5 border-0 rounded-4">
+    <div class="card-header bg-white border-0 pt-4 pb-0">
+      <h5 class="text-secondary fw-bold">⚙️ Parametry wyszukiwania</h5>
+    </div>
+    <div class="card-body p-4">
       
-      <tr *ngIf="kursyWalut.length === 0">
-        <td colspan="4" style="text-align: center; padding: 20px; color: gray;">
-          Baza danych jest pusta. Kliknij zielony przycisk!
-        </td>
-      </tr>
-    </tbody>
-  </table>
+      <div class="row g-3 align-items-end justify-content-center">
+        
+        <div class="col-md-3">
+          <label class="form-label fw-bold">Waluta</label>
+          <select [(ngModel)]="wybranaWaluta" class="form-select form-select-lg shadow-sm">
+            <option value="USD">🇺🇸 Dolar (USD)</option>
+            <option value="EUR">🇪🇺 Euro (EUR)</option>
+            <option value="CHF">🇨🇭 Frank (CHF)</option>
+            <option value="GBP">🇬🇧 Funt (GBP)</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-bold">Data początkowa</label>
+          <input type="date" [(ngModel)]="dataOd" class="form-control form-control-lg shadow-sm">
+        </div>
+        
+        <div class="col-md-3">
+          <label class="form-label fw-bold">Data końcowa</label>
+          <input type="date" [(ngModel)]="dataDo" class="form-control form-control-lg shadow-sm">
+        </div>
+
+        <div class="col-md-3 d-grid">
+          <button (click)="pobierzKursy()" class="btn btn-success btn-lg shadow-sm fw-bold">
+            ⬇️ Pobierz z NBP
+          </button>
+        </div>
+      </div>
+
+      <div class="text-center mt-3">
+        <button (click)="odswiezListe()" class="btn btn-outline-primary btn-sm">
+          🔄 Odśwież tylko tabelę
+        </button>
+      </div>
+    
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="card-header bg-primary text-white py-3">
+      <h5 class="mb-0 fw-bold">📊 Historia kursów w bazie</h5>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table table-hover table-striped mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th class="py-3 ps-4">ID</th>
+            <th class="py-3">Waluta</th>
+            <th class="py-3">Kurs Średni</th>
+            <th class="py-3">Data Kursu</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let kurs of kursyWalut">
+            <td class="ps-4 text-muted">#{{ kurs.id }}</td>
+            <td>
+              <span class="badge bg-dark rounded-pill">{{ kurs.currency_code }}</span>
+            </td>
+            <td class="fw-bold text-success fs-5">
+              {{ kurs.rate }} zł
+            </td>
+            <td>{{ kurs.date }}</td>
+          </tr>
+          
+          <tr *ngIf="kursyWalut.length === 0">
+            <td colspan="4" class="text-center py-5 text-muted">
+              <div class="fs-1 mb-2">📭</div>
+              <p>Baza danych jest pusta.<br>Wybierz daty i pobierz kursy!</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div class="text-center text-muted mt-5 mb-5 small">
+    &copy; 2026 Projekt Waluty | Wykonano w technologii Docker
+  </div>
 
 </div>

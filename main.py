@@ -1,33 +1,28 @@
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.middleware.cors import CORSMiddleware  # <--- To jest ta nowa rzecz
+from fastapi.middleware.cors import CORSMiddleware
 import requests
 from datetime import date as date_type
 from sqlalchemy.orm import Session
-# Importujemy rzeczy z naszego pliku database.py
 from database import engine, SessionLocal, Base, CurrencyRate
+from pydantic import BaseModel
 
-# To tworzy tabelę w bazie danych (jeśli jeszcze nie istnieje)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# --- KONFIGURACJA CORS (Nowy fragment) ---
-# Pozwalamy Angularowi (który działa na porcie 4200) łączyć się z tym Backendem
-origins = [
-    "http://localhost:4200",
-    "http://127.0.0.1:4200",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],     # Pozwalamy na każdą metodę (GET, POST itp.)
-    allow_headers=["*"],     # Pozwalamy na każde nagłówki
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-# -----------------------------------------
 
-# Funkcja pomocnicza do pobierania sesji bazy danych
+class FetchRequest(BaseModel):
+    currency: str
+    start_date: str
+    end_date: str
+
 def get_db():
     db = SessionLocal()
     try:
@@ -37,39 +32,43 @@ def get_db():
 
 @app.get("/")
 def read_root():
-    return {"message": "System walutowy działa (z obsługą CORS)!"}
+    return {"message": "System walutowy dziala"}
 
-# Endpoint 1: Pobierz z NBP i zapisz do bazy
 @app.post("/currencies/fetch")
-def fetch_currency(currency_code: str = "USD", db: Session = Depends(get_db)):
-    # 1. Pobieramy z NBP
-    url = f"http://api.nbp.pl/api/exchangerates/rates/A/{currency_code}/?format=json"
+def fetch_currency(request: FetchRequest, db: Session = Depends(get_db)):
+    url = f"http://api.nbp.pl/api/exchangerates/rates/A/{request.currency}/{request.start_date}/{request.end_date}/?format=json"
+    
     response = requests.get(url)
     
     if response.status_code != 200:
-        raise HTTPException(status_code=404, detail="Nie znaleziono waluty w NBP")
+        raise HTTPException(status_code=400, detail="Blad polaczenia z NBP lub zly zakres dat")
     
     data = response.json()
-    kurs = data['rates'][0]['mid']
-    data_kursu = date_type.fromisoformat(data['rates'][0]['effectiveDate'])
+    rates = data['rates']
     
-    # 2. Tworzymy nowy rekord do bazy
-    nowy_wpis = CurrencyRate(
-        currency_code=data['code'],
-        rate=kurs,
-        date=data_kursu
-    )
+    licznik = 0
+    for rate in rates:
+        kurs = rate['mid']
+        data_kursu = date_type.fromisoformat(rate['effectiveDate'])
+        
+        istnieje = db.query(CurrencyRate).filter(
+            CurrencyRate.currency_code == data['code'],
+            CurrencyRate.date == data_kursu
+        ).first()
+        
+        if not istnieje:
+            nowy_wpis = CurrencyRate(
+                currency_code=data['code'],
+                rate=kurs,
+                date=data_kursu
+            )
+            db.add(nowy_wpis)
+            licznik += 1
     
-    # 3. Zapisujemy w bazie
-    db.add(nowy_wpis)
-    db.commit()      # Zatwierdź zmiany
-    db.refresh(nowy_wpis) # Odśwież, żeby dostać ID
-    
-    return {"message": "Zapisano w bazie!", "data": nowy_wpis}
+    db.commit()
+    return {"message": f"Pobrano {licznik} nowych kursow"}
 
-# Endpoint 2: Odczytaj wszystko, co mamy w bazie
 @app.get("/currencies")
 def get_currencies(db: Session = Depends(get_db)):
-    # SELECT * FROM kursy_walut
     kursy = db.query(CurrencyRate).all()
     return kursy
