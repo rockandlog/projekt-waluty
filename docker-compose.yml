@@ -1,29 +1,14 @@
 version: '3.8'
 
 services:
-  # Serwis 1: Twój Backend
   backend:
-    build: .  # Buduj z głównego folderu (tam gdzie jest Dockerfile backendu)
-    container_name: waluty-backend
+    build: .
     ports:
-      - "8000:8000" # Port na zewnątrz : Port w środku
-    volumes:
-      - ./waluty.db:/app/waluty.db # Żeby baza danych nie znikała po restarcie
-    networks:
-      - waluty-network
+      - "8000:8000"
 
-  # Serwis 2: Twój Frontend
   frontend:
-    build: ./frontend # Buduj z folderu frontend
-    container_name: waluty-frontend
+    build: ./frontend
     ports:
-      - "4200:80" # Mapujemy port 80 kontenera na Twój port 4200
+      - "4200:80"
     depends_on:
-      - backend # Frontend startuje dopiero jak Backend wstanie
-    networks:
-      - waluty-network
-
-# Sieć, żeby kontenery się widziały (chociaż tutaj i tak gadamy przez przeglądarkę)
-networks:
-  waluty-network:
-    driver: bridge
+      - backend
