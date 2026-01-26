@@ -1,6 +1,6 @@
-import { Component, ChangeDetectorRef } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -12,10 +12,10 @@ import { FormsModule } from '@angular/forms';
 })
 export class AppComponent {
   kursyWalut: any[] = [];
-  
+
   tryb: string = 'zakres';
   wybranaWaluta: string = 'USD';
-  
+
   wybranyRok: number = 2025;
   wybranyKwartal: string = '1';
   wybranyMiesiac: string = '01';
@@ -26,14 +26,14 @@ export class AppComponent {
   status: string = '';
   isLoading: boolean = false;
 
-  
-  constructor(private http: HttpClient, private cd: ChangeDetectorRef) {}
+
+  constructor(private http: HttpClient, private cd: ChangeDetectorRef) { }
 
   przeliczDaty() {
     if (this.tryb === 'rok') {
       this.dataOd = `${this.wybranyRok}-01-01`;
       this.dataDo = `${this.wybranyRok}-12-31`;
-    } 
+    }
     else if (this.tryb === 'kwartal') {
       if (this.wybranyKwartal === '1') {
         this.dataOd = `${this.wybranyRok}-01-01`; this.dataDo = `${this.wybranyRok}-03-31`;
@@ -44,7 +44,7 @@ export class AppComponent {
       } else {
         this.dataOd = `${this.wybranyRok}-10-01`; this.dataDo = `${this.wybranyRok}-12-31`;
       }
-    } 
+    }
     else if (this.tryb === 'miesiac') {
       const ostatniDzien = new Date(this.wybranyRok, parseInt(this.wybranyMiesiac), 0).getDate();
       this.dataOd = `${this.wybranyRok}-${this.wybranyMiesiac}-01`;
@@ -54,10 +54,10 @@ export class AppComponent {
 
   pobierzKursy() {
     this.przeliczDaty();
-    
+
     this.isLoading = true;
     this.status = '⏳ Łączenie z NBP...';
-    this.cd.detectChanges(); 
+    this.cd.detectChanges();
 
     const body = {
       currency: this.wybranaWaluta,
@@ -68,38 +68,38 @@ export class AppComponent {
     this.http.post('http://localhost:8000/currencies/fetch', body).subscribe({
       next: (response: any) => {
         this.status = `✅ Sukces! ${response.message}`;
-        
+
         this.odswiezListe();
       },
       error: (error) => {
         console.error(error);
         this.status = '❌ Błąd. Sprawdź konsolę (może NBP nie ma danych?)';
         this.isLoading = false;
-        this.cd.detectChanges(); 
+        this.cd.detectChanges();
       }
     });
   }
 
   odswiezListe() {
-    
+
     const url = `http://localhost:8000/currencies/filter/range?currency=${this.wybranaWaluta}&start_date=${this.dataOd}&end_date=${this.dataDo}`;
 
     this.http.get<any[]>(url).subscribe({
       next: (data) => {
         this.kursyWalut = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        
-        
+
+
         this.isLoading = false;
-        
-        
-        setTimeout(() => { 
-          if(!this.isLoading) {
-             this.status = ''; 
-             this.cd.detectChanges(); 
+
+
+        setTimeout(() => {
+          if (!this.isLoading) {
+            this.status = '';
+            this.cd.detectChanges();
           }
         }, 3000);
 
-        
+
         this.cd.detectChanges();
       },
       error: (error) => {

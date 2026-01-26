@@ -1,7 +1,7 @@
-import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app'; 
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { AppComponent } from './app';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
@@ -31,7 +31,7 @@ describe('AppComponent', () => {
   it('should start with isLoading = false', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    
+
     expect(app.isLoading).toBe(false);
   });
 });
