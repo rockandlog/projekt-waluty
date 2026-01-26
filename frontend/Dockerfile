@@ -1,6 +1,6 @@
 FROM nginx:alpine
 
-# ZMIANA: Dodalismy /browser na koncu sciezki
+
 COPY ./dist/frontend/browser /usr/share/nginx/html
 
 EXPOSE 80

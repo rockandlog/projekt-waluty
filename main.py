@@ -31,17 +31,15 @@ def get_db():
     finally:
         db.close()
 
-# 1. Endpoint zgodny z wymaganiami: GET /currencies
-# Zwraca liste dostepnych walut w bazie
+@app.get("/")
+def read_root():
+    return {"message": "System walutowy dziala"}
+
 @app.get("/currencies")
 def get_available_currencies(db: Session = Depends(get_db)):
-    # Pobieramy unikalne kody walut z bazy
     waluty = db.query(CurrencyRate.currency_code).distinct().all()
-    # Wynik to lista krotek, zamieniamy na prosta liste stringow: ['USD', 'EUR']
     return [w[0] for w in waluty]
 
-# 2. Endpoint zgodny z wymaganiami: GET /currencies/<date>
-# Zwraca kursy z konkretnego dnia
 @app.get("/currencies/{date_str}")
 def get_currency_by_date(date_str: str, db: Session = Depends(get_db)):
     try:
@@ -52,8 +50,6 @@ def get_currency_by_date(date_str: str, db: Session = Depends(get_db)):
     kursy = db.query(CurrencyRate).filter(CurrencyRate.date == szukana_data).all()
     return kursy
 
-# Endpoint pomocniczy do filtrowania (dla tabeli z zakresem)
-# Nie jest wprost w wymaganiach, ale jest niezbedny do wyswietlania historii
 @app.get("/currencies/filter/range")
 def get_currencies_range(currency: str, start_date: str, end_date: str, db: Session = Depends(get_db)):
     d_start = date_type.fromisoformat(start_date)
@@ -66,7 +62,6 @@ def get_currencies_range(currency: str, start_date: str, end_date: str, db: Sess
     ).all()
     return kursy
 
-# 3. Endpoint zgodny z wymaganiami: POST /currencies/fetch
 @app.post("/currencies/fetch")
 def fetch_currency(request: FetchRequest, db: Session = Depends(get_db)):
     url = f"http://api.nbp.pl/api/exchangerates/rates/A/{request.currency}/{request.start_date}/{request.end_date}/?format=json"

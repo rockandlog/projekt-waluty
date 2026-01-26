@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core'; // <--- ZMIANA 1: Import ChangeDetectorRef
+import { Component, ChangeDetectorRef } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -26,7 +26,7 @@ export class AppComponent {
   status: string = '';
   isLoading: boolean = false;
 
-  // <--- ZMIANA 2: Wstrzykujemy ChangeDetectorRef w konstruktorze
+  
   constructor(private http: HttpClient, private cd: ChangeDetectorRef) {}
 
   przeliczDaty() {
@@ -57,7 +57,7 @@ export class AppComponent {
     
     this.isLoading = true;
     this.status = '⏳ Łączenie z NBP...';
-    this.cd.detectChanges(); // <--- ZMIANA: Wymus odswiezenie UI
+    this.cd.detectChanges(); 
 
     const body = {
       currency: this.wybranaWaluta,
@@ -68,31 +68,30 @@ export class AppComponent {
     this.http.post('http://localhost:8000/currencies/fetch', body).subscribe({
       next: (response: any) => {
         this.status = `✅ Sukces! ${response.message}`;
-        // Wywolujemy odswiezenie tabeli
+        
         this.odswiezListe();
       },
       error: (error) => {
         console.error(error);
         this.status = '❌ Błąd. Sprawdź konsolę (może NBP nie ma danych?)';
         this.isLoading = false;
-        this.cd.detectChanges(); // <--- ZMIANA: Wymus odswiezenie UI przy bledzie
+        this.cd.detectChanges(); 
       }
     });
   }
 
   odswiezListe() {
-    // Nie przeliczamy dat tutaj ponownie, zeby nie nadpisac ewentualnych zmian
-    // Uzywamy tych, ktore byly ustawione przy pobieraniu
+    
     const url = `http://localhost:8000/currencies/filter/range?currency=${this.wybranaWaluta}&start_date=${this.dataOd}&end_date=${this.dataDo}`;
 
     this.http.get<any[]>(url).subscribe({
       next: (data) => {
         this.kursyWalut = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         
-        // Odblokowujemy przycisk
+        
         this.isLoading = false;
         
-        // Czyscimy status po 3 sek
+        
         setTimeout(() => { 
           if(!this.isLoading) {
              this.status = ''; 
@@ -100,7 +99,7 @@ export class AppComponent {
           }
         }, 3000);
 
-        // <--- KLUCZOWA ZMIANA: Mówimy Angularowi "Hej, mam nowe dane, odmaluj tabele TERAZ!"
+        
         this.cd.detectChanges();
       },
       error: (error) => {
