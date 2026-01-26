@@ -1,8 +1,19 @@
-FROM nginx:alpine
+FROM node:22-bullseye
 
+WORKDIR /app
 
-COPY ./dist/frontend/browser /usr/share/nginx/html
+RUN apt-get update && apt-get install -y chromium
+ENV CHROME_BIN=/usr/bin/chromium
 
-EXPOSE 80
+COPY package*.json ./
 
-CMD ["nginx", "-g", "daemon off;"]
+RUN npm install
+RUN npm install -g @angular/cli
+
+COPY . .
+
+RUN npm run build
+
+EXPOSE 4200 9876
+
+CMD ["ng", "serve", "--host", "0.0.0.0"]
