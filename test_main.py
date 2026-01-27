@@ -4,7 +4,7 @@ from main import app
 
 client = TestClient(app)
 
-def test_read_root():
+def test_read_main():
     response = client.get("/")
     assert response.status_code == 200
     assert response.json() == {"message": "System walutowy dziala"}
@@ -34,13 +34,28 @@ def test_fetch_currency_mock():
         }
         
         response = client.post("/currencies/fetch", json=payload)
-        
+
         assert response.status_code == 200
         assert "Pobrano 2 nowych kursow" in response.json()["message"]
 
-def test_get_currencies_after_fetch():
-    response = client.get("/currencies/2025-01-01")
+def test_get_currency_by_date():
+    mock_nbp_response = {
+        "code": "EUR",
+        "rates": [{"mid": 4.80, "effectiveDate": "2025-05-05"}]
+    }
+    
+    with patch('requests.get') as mock_get:
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.json.return_value = mock_nbp_response
+        
+        client.post("/currencies/fetch", json={
+            "currency": "EUR", 
+            "start_date": "2025-05-05", 
+            "end_date": "2025-05-05"
+        })
+
+    response = client.get("/currencies/2025-05-05")
     assert response.status_code == 200
     data = response.json()
     assert len(data) > 0
-    assert data[0]["rate"] == 4.50
+    assert data[0]["currency_code"] == "EUR"

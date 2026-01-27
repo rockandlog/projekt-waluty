@@ -12,8 +12,6 @@ RUN npm install -g @angular/cli
 
 COPY . .
 
-RUN npm run build
+EXPOSE 4200
 
-EXPOSE 4200 9876
-
-CMD ["ng", "serve", "--host", "0.0.0.0"]
+CMD ["ng", "serve", "--host", "0.0.0.0", "--poll", "2000"]
